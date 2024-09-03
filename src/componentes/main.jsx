@@ -1,7 +1,5 @@
-// main.jsx
-
-import React, { useState } from 'react';
-import ReactDOM from 'react-dom';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom'; // Importa Link para la navegación
 
 const areas = [
   {
@@ -101,6 +99,23 @@ const initialData = {
   },
 };
 
+const dangerToBodyParts = {
+  'Caídas de Altura': ['cabezaOidos', 'brazosManos', 'extremidadesInferiores'],
+  'Exposición a Temperaturas': ['ojosCara', 'sistemaRespiratorio', 'brazosManos'],
+  'Exposición a Electricidad Estática': ['ojosCara', 'tronco'],
+  'Exposición a Sustancias Químicas': ['ojosCara', 'brazosManos', 'tronco', 'sistemaRespiratorio'],
+  'Exposición a Radiaciones': ['ojosCara', 'tronco'],
+  'Exposición agentes Biológicos': ['ojosCara', 'brazosManos', 'sistemaRespiratorio'],
+  'Exposición a Ruido': ['ojosCara', 'brazosManos'],
+  'Exposición a Vibraciones': ['brazosManos', 'tronco'],
+  'Superficies cortantes': ['brazosManos'],
+  'Caídas a nivel o desnivel': ['cabezaOidos', 'brazosManos', 'extremidadesInferiores'],
+  'Daños Ergonómicos': ['tronco', 'brazosManos'],
+  'Calentamiento de materia prima, subproducto o producto': ['ojosCara', 'brazosManos'],
+  'Proyección de material o herramienta': ['ojosCara', 'brazosManos', 'tronco'],
+  'Mantenimiento preventivo, correctivo o predictivo': ['brazosManos', 'tronco'],
+};
+
 const calculateRiskLevel = (consecuencia, exposicion, probabilidad) => {
   const magnitud = consecuencia * exposicion * probabilidad;
   if (magnitud <= 5) return 'Bajo o Aceptable';
@@ -108,7 +123,7 @@ const calculateRiskLevel = (consecuencia, exposicion, probabilidad) => {
   return 'Alto o Inaceptable';
 };
 
-const App = () => {
+const Main = () => {
   const [data, setData] = useState(initialData);
   const [puestos, setPuestos] = useState(areas.find(area => area.nombre === initialData.area)?.puestos || []);
 
@@ -134,13 +149,37 @@ const App = () => {
 
   const handlePeligroChange = (event) => {
     const { name, checked } = event.target;
-    setData(prevData => ({
-      ...prevData,
-      identificacionPeligros: {
+    setData(prevData => {
+      const updatedPeligros = {
         ...prevData.identificacionPeligros,
         [name]: checked
-      }
-    }));
+      };
+
+      // Actualiza las partes del cuerpo expuestas en función de los peligros seleccionados
+      const updatedPartesCuerpo = { ...prevData.partesCuerpo };
+
+      Object.keys(dangerToBodyParts).forEach(danger => {
+        dangerToBodyParts[danger].forEach(part => {
+          if (updatedPeligros[danger]) {
+            updatedPartesCuerpo[part] = true;
+          } else {
+            // Si ningún otro peligro está asociado con esta parte del cuerpo, desmarca
+            const anyOtherDanger = Object.keys(updatedPeligros).some(otherDanger =>
+              dangerToBodyParts[otherDanger].includes(part) && updatedPeligros[otherDanger]
+            );
+            if (!anyOtherDanger) {
+              updatedPartesCuerpo[part] = false;
+            }
+          }
+        });
+      });
+
+      return {
+        ...prevData,
+        identificacionPeligros: updatedPeligros,
+        partesCuerpo: updatedPartesCuerpo
+      };
+    });
   };
 
   return (
@@ -209,10 +248,12 @@ const App = () => {
         <p><strong>Probabilidad:</strong> {data.evaluacionRiesgo.probabilidad}</p>
         <p><strong>Magnitud del Riesgo:</strong> {calculateRiskLevel(data.evaluacionRiesgo.consecuencia, data.evaluacionRiesgo.exposicion, data.evaluacionRiesgo.probabilidad)}</p>
       </div>
+
+      <div className="navigation">
+        <Link to="/">Regresar a App</Link>
+      </div>
     </div>
   );
 };
 
-ReactDOM.render(<App />, document.getElementById('root'));
-
-export default App;
+export default Main;
