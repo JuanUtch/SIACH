@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom'; // Importa Link para la navegación
 
 const areas = [
@@ -63,7 +63,7 @@ const areas = [
 const initialData = {
   area: areas[0].nombre,
   puestoTrabajo: areas[0].puestos[0] || '',
-  descripcionActividad: 'Recibir, alistar, empacar y entregar, productos en condiciones adecuadas de aseo e higiene.',
+  descripcionActividad: 'Recibir, alistar, empacar y entregar productos en condiciones adecuadas de aseo e higiene.',
   fechaInspeccion: '15/03/2023',
   tiempoExposicion: '8 hrs',
   partesCuerpo: {
@@ -116,6 +116,27 @@ const dangerToBodyParts = {
   'Mantenimiento preventivo, correctivo o predictivo': ['brazosManos', 'tronco'],
 };
 
+const dangerImages = {
+  'Caídas de Altura': '',
+  'Exposición a Temperaturas': '',
+  'Exposición a Electricidad Estática': '',
+  'Exposición a Sustancias Químicas': '',
+  'Exposición a Radiaciones': '',
+  'Exposición agentes Biológicos': '',
+  'Exposición a Ruido': [
+    '/img/19.png',
+    '/img/20.png',
+
+  ],
+  'Exposición a Vibraciones': '',
+  'Superficies cortantes': '',
+  'Caídas a nivel o desnivel': '',
+  'Daños Ergonómicos': '',
+  'Calentamiento de materia prima, subproducto o producto': '',
+  'Proyección de material o herramienta': '',
+  'Mantenimiento preventivo, correctivo o predictivo': '',
+};
+
 const calculateRiskLevel = (consecuencia, exposicion, probabilidad) => {
   const magnitud = consecuencia * exposicion * probabilidad;
   if (magnitud <= 5) return 'Bajo o Aceptable';
@@ -126,6 +147,7 @@ const calculateRiskLevel = (consecuencia, exposicion, probabilidad) => {
 const Main = () => {
   const [data, setData] = useState(initialData);
   const [puestos, setPuestos] = useState(areas.find(area => area.nombre === initialData.area)?.puestos || []);
+  const [selectedDanger, setSelectedDanger] = useState(null);
 
   const handleAreaChange = (event) => {
     const selectedArea = event.target.value;
@@ -180,52 +202,89 @@ const Main = () => {
         partesCuerpo: updatedPartesCuerpo
       };
     });
+
+    // Actualiza la imagen seleccionada
+    setSelectedDanger(checked ? name : null);
   };
 
   return (
     <div className="app">
       <h1>Estudio de Riesgo</h1>
-      <div className="data-section">
-        <h2>Seleccionar Área y Puesto</h2>
-        <label>
-          Área:
-          <select value={data.area} onChange={handleAreaChange}>
-            {areas.map((area, index) => (
-              <option key={index} value={area.nombre}>
-                {area.nombre}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Puesto de trabajo:
-          <select value={data.puestoTrabajo} onChange={handlePuestoChange}>
-            {puestos.map((puesto, index) => (
-              <option key={index} value={puesto}>
-                {puesto}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <h2>Detalles del Puesto</h2>
-        <p><strong>Descripción de la actividad:</strong> {data.descripcionActividad}</p>
-        <p><strong>Fecha de inspección:</strong> {data.fechaInspeccion}</p>
-        <p><strong>Tiempo de exposición:</strong> {data.tiempoExposicion}</p>
-
-        <h2>Partes del Cuerpo Expuestas al Riesgo</h2>
-        <ul>
-          {Object.keys(data.partesCuerpo).map((part, index) => (
-            <li key={index}>
-              {part.replace(/([A-Z])/g, ' $1').toUpperCase()}: {data.partesCuerpo[part] ? 'X' : ' '}
-            </li>
+      <div className="form-group">
+        <label htmlFor="area">Área:</label>
+        <select id="area" value={data.area} onChange={handleAreaChange}>
+          {areas.map(area => (
+            <option key={area.nombre} value={area.nombre}>
+              {area.nombre}
+            </option>
           ))}
-        </ul>
-
-        <h2>Identificación de Peligros</h2>
-        <ul>
-          {Object.keys(data.identificacionPeligros).map((peligro, index) => (
-            <li key={index}>
+        </select>
+      </div>
+      <div className="form-group">
+        <label htmlFor="puestoTrabajo">Puesto de Trabajo:</label>
+        <select id="puestoTrabajo" value={data.puestoTrabajo} onChange={handlePuestoChange}>
+          {puestos.map(puesto => (
+            <option key={puesto} value={puesto}>
+              {puesto}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="form-group">
+        <label htmlFor="descripcionActividad">Descripción de la Actividad:</label>
+        <textarea
+          id="descripcionActividad"
+          value={data.descripcionActividad}
+          onChange={(e) => setData({ ...data, descripcionActividad: e.target.value })}
+        />
+      </div>
+      <div className="form-group">
+        <label htmlFor="fechaInspeccion">Fecha de Inspección:</label>
+        <input
+          type="date"
+          id="fechaInspeccion"
+          value={data.fechaInspeccion}
+          onChange={(e) => setData({ ...data, fechaInspeccion: e.target.value })}
+        />
+      </div>
+      <div className="form-group">
+        <label htmlFor="tiempoExposicion">Tiempo de Exposición:</label>
+        <input
+          type="text"
+          id="tiempoExposicion"
+          value={data.tiempoExposicion}
+          onChange={(e) => setData({ ...data, tiempoExposicion: e.target.value })}
+        />
+      </div>
+      <div className="form-group">
+        <fieldset>
+          <legend>Partes del Cuerpo Afectadas:</legend>
+          {Object.keys(data.partesCuerpo).map(part => (
+            <div key={part}>
+              <label>
+                <input
+                  type="checkbox"
+                  name={part}
+                  checked={data.partesCuerpo[part]}
+                  onChange={() => setData(prevData => ({
+                    ...prevData,
+                    partesCuerpo: {
+                      ...prevData.partesCuerpo,
+                      [part]: !prevData.partesCuerpo[part]
+                    }
+                  }))}
+                />
+                {part}
+              </label>
+            </div>
+          ))}
+        </fieldset>
+      </div>
+      <div className="form-group">
+        <fieldset>
+          <legend>Identificación de Peligros:</legend>
+          {Object.keys(data.identificacionPeligros).map(peligro => (
+            <div key={peligro}>
               <label>
                 <input
                   type="checkbox"
@@ -235,22 +294,31 @@ const Main = () => {
                 />
                 {peligro}
               </label>
-            </li>
+            </div>
           ))}
-        </ul>
-
-        <h2>Equipo de Protección Personal Sugerido</h2>
-        <p>{data.equipoProteccion}</p>
-
-        <h2>Evaluación de Riesgo</h2>
-        <p><strong>Consecuencia:</strong> {data.evaluacionRiesgo.consecuencia}</p>
-        <p><strong>Exposición:</strong> {data.evaluacionRiesgo.exposicion}</p>
-        <p><strong>Probabilidad:</strong> {data.evaluacionRiesgo.probabilidad}</p>
-        <p><strong>Magnitud del Riesgo:</strong> {calculateRiskLevel(data.evaluacionRiesgo.consecuencia, data.evaluacionRiesgo.exposicion, data.evaluacionRiesgo.probabilidad)}</p>
+        </fieldset>
       </div>
-
-      <div className="navigation">
-        <Link to="/">Regresar a App</Link>
+      {selectedDanger && (
+        <div className="image-container">
+        <img
+          src={dangerImages[selectedDanger]}
+          alt={selectedDanger}
+           className="danger-image" // Aplica la clase aquí
+        />
+        </div>
+      )}
+      <div className="form-group">
+        <label htmlFor="equipoProteccion">Equipo de Protección:</label>
+        
+      </div>
+      <div className="form-group">
+        <h2>Nivel de Riesgo</h2>
+        <p>
+          Magnitud de Riesgo: {calculateRiskLevel(data.evaluacionRiesgo.consecuencia, data.evaluacionRiesgo.exposicion, data.evaluacionRiesgo.probabilidad)}
+        </p>
+      </div>
+      <div className="form-group">
+        <Link to="/nextpage" className="btn btn-primary">Siguiente</Link>
       </div>
     </div>
   );

@@ -2,12 +2,10 @@ import { BrowserRouter as Router, Route, Routes, Link, useLocation } from 'react
 import Login from './componentes/login';
 import Main from './componentes/main';
 
-
-
 function Navigation() {
   const location = useLocation();
   
-  // Determine if we are on the Login or Main page
+  // Mostrar la navegación solo si no estamos en las páginas de Login o Main
   const showNavigation = !(location.pathname === '/login' || location.pathname === '/main');
 
   return (
@@ -32,7 +30,7 @@ function Navigation() {
 function App() {
   return (
     <Router>
-      <div className="App">
+      <div className="app-container">
         <header className="App-header">
           <Navigation />
           <Routes>
@@ -41,6 +39,9 @@ function App() {
             <Route path="/main" element={<Main />} />
           </Routes>
         </header>
+        <footer className="footer">
+          <p>© 2024 Mi Aplicación. Todos los derechos reservados.</p>
+        </footer>
       </div>
     </Router>
   );
