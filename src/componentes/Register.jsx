@@ -1,29 +1,33 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import './Login.css'; // Archivo CSS para los estilos
+import './Register.css'; // Archivo CSS para los estilos
 
-function Login() {
+function Register() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate(); // Hook para redirección
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (password !== confirmPassword) {
+      setError('Las contraseñas no coinciden');
+      return;
+    }
+
     try {
-      const response = await axios.post('http://localhost:5000/login', {
+      const response = await axios.post('http://localhost:5000/register', {
         username,
         password,
       });
 
       if (response.data.success) {
-        // Guardar el token o datos de usuario en localStorage
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        navigate('/main'); // Redirige al usuario a la página principal
+        navigate('/login'); // Redirige al usuario a la página de login después de registrarse
       } else {
-        setError('Nombre de usuario o contraseña incorrectos');
+        setError('Error al registrarse');
       }
     } catch (err) {
       console.error('Error en la solicitud:', err);
@@ -32,9 +36,9 @@ function Login() {
   };
 
   return (
-    <div className="login-container">
-      <div className="login-box">
-        <h2>Iniciar Sesión</h2>
+    <div className="register-container">
+      <div className="register-box">
+        <h2>Registro</h2>
         <form onSubmit={handleSubmit}>
           <div className="input-container">
             <label>Usuario: </label>
@@ -54,13 +58,21 @@ function Login() {
               required
             />
           </div>
-          <button type="submit" className="login-btn">Iniciar Sesión</button>
+          <div className="input-container">
+            <label>Confirmar Contraseña:</label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+            />
+          </div>
+          <button type="submit" className="register-btn">Registrarse</button>
           {error && <p className="error-msg">{error}</p>}
         </form>
-        <p>¿No tienes una cuenta? <a href="/register">Regístrate aquí</a></p>
       </div>
     </div>
   );
 }
 
-export default Login;
+export default Register;
